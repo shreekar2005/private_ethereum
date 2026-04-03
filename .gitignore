@@ -1,0 +1,39 @@
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Compiled Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables (CRUCIAL for security)
+.env
+.env.local
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing and Coverage
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+
+# Distribution and Packaging
+build/
+dist/
+*.egg-info/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+Thumbs.db
+
+# Local Geth Blockchain Data
+data/

@@ -6,17 +6,17 @@ import matplotlib.pyplot as plt
 from web3 import Web3
 import solcx
 
-# 1. Install specific solidity compiler version
+# installing solc 0.8.0
 solcx.install_solc('0.8.0')
 
-# 2. Connect to local Ethereum node [cite: 81]
+# connecting to local geth node on port 8545
 w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:8545'))
 print(f"Connected to Ethereum: {w3.is_connected()}")
 
-# Configure a default account for deploying and paying gas
+# setting default account for paying gas fees
 w3.eth.default_account = w3.eth.accounts[0]
 
-# 3. Compile the Solidity Contract
+# read and compile the solidity contract
 with open("PaymentNetwork.sol", "r") as file:
     contract_source = file.read()
 
@@ -29,7 +29,7 @@ contract_id, contract_interface = compiled_sol.popitem()
 abi = contract_interface['abi']
 bytecode = contract_interface['bin']
 
-# Deploy Contract [cite: 83]
+# deploying the contract
 PaymentNetwork = w3.eth.contract(abi=abi, bytecode=bytecode)
 tx_hash = PaymentNetwork.constructor().transact()
 tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
@@ -37,23 +37,21 @@ contract_address = tx_receipt.contractAddress
 contract = w3.eth.contract(address=contract_address, abi=abi)
 print(f"Contract Deployed at: {contract_address}")
 
-# 4. Generate the Power-Law Network (100 users) [cite: 87]
-# Using Barabasi-Albert model to ensure a connected graph with power-law degree distribution
+# generating network with 100 users following power law
 G = nx.barabasi_albert_graph(n=100, m=2)
 
-# 5. Register Users and Create Accounts
 print("Registering users and creating joint accounts...")
 for node in G.nodes():
-    # Register user (using node integer as ID) [cite: 71]
+    # register each user
     contract.functions.registerUser(node, f"User_{node}").transact()
 
 for u, v in G.edges():
-    # Combined balance follows exponential distribution with mean = 10 [cite: 88]
+    # setting combined balance using exponential distribution with mean 10
     combined_balance = int(np.random.exponential(scale=10))
     if combined_balance < 2:
-        combined_balance = 2 # Ensure at least 1 coin each if an edge exists
+        combined_balance = 2 # keeping at least 1 coin per user
         
-    # Distributed equally [cite: 88]
+    # distributing equally between both users
     balance_u = combined_balance // 2
     balance_v = combined_balance - balance_u
     
@@ -61,7 +59,7 @@ for u, v in G.edges():
 
 print("Network setup complete. Starting simulation...")
 
-# 6. Simulate Transactions [cite: 89, 90]
+# simulating 1000 random transactions
 success_rates = []
 success_count = 0
 total_transactions = 1000
@@ -70,34 +68,32 @@ for i in range(1, total_transactions + 1):
     sender = random.choice(list(G.nodes()))
     receiver = random.choice(list(G.nodes()))
     
-    # Ensure sender and receiver are different
+    # making sure sender and receiver are different
     while receiver == sender:
         receiver = random.choice(list(G.nodes()))
 
-    # Find shortest path using least hop count 
     try:
-        # nx.shortest_path handles the BFS and resolves ties inherently by graph structure 
+        # finding shortest path (least hop count)
         path = nx.shortest_path(G, source=sender, target=receiver)
         
-        # Fire transaction [cite: 84, 89]
+        # firing the transaction for 1 coin
         try:
             contract.functions.sendAmount(path, 1).transact()
             success_count += 1
         except Exception as e:
-            # Transaction reverted (e.g., insufficient balance)
+            # txn failed (mostly because of insufficient balance on some edge)
             pass
             
     except nx.NetworkXNoPath:
-        # Should not happen as barabasi_albert generates connected graphs, but good practice
         pass
 
-    # Report and store data every 100 transactions [cite: 90]
+    # calculating ratio after every 100 txns
     if i % 100 == 0:
         ratio = success_count / i
         success_rates.append(ratio)
         print(f"Transactions: {i} | Success Ratio: {ratio:.4f}")
 
-# 7. Plotting the results [cite: 90]
+# plotting the graph
 plt.plot(range(100, 1001, 100), success_rates, marker='o')
 plt.xlabel("Number of Transactions")
 plt.ylabel("Success Ratio")

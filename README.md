@@ -1,9 +1,6 @@
 # Decentralized Payment Channel Network (DApp)
 
 **Course:** CSL7490 - Blockchain Assignment 2  
-**Team:** - Shreekar (B23CS1069)
-- will update this 
-
 **Development Environment:** This project was developed and tested natively on an **Ubuntu Linux** machine.
 
 ## Project Overview
@@ -73,3 +70,10 @@ python3 simulate_network.py
 3. It will fire 1,000 randomized transactions.
 4. The terminal will print the success ratio every 100 transactions.
 5. Finally, a `matplotlib` graph will appear displaying the transaction success ratio over time.
+
+## Group Members
+
+* (B23CS1069) b23cs1069@iitj.ac.in - Shreekar
+* (B23CS1101) B23CS1101@iitj.ac.in - Tavishi Srivastava
+* (B23CS1076) b23cs1076@iitj.ac.in - Vadlamudi Jyothsna
+* (B23CS1031) b23cs1031@iitj.ac.in - Kurra Hema

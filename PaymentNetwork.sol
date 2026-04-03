@@ -8,26 +8,26 @@ contract PaymentNetwork {
         bool isRegistered;
     }
 
-    // Tracks registered users
+    // tracking registered users
     mapping(uint => User) public users;
     
-    // Tracks if an edge (joint account) exists between two user IDs
+    // checking if joint account exists between two users
     mapping(uint => mapping(uint => bool)) public jointAccounts;
     
-    // Tracks the individual balance contribution for a specific direction on an edge
-    // balances[A][B] = A's balance in the joint account with B
+    // tracking individual balance contribution on an edge
+    // balances[A][B] means A's balance in the joint account with B
     mapping(uint => mapping(uint => uint)) public balances;
 
-    // Register a new user [cite: 71]
+    // register a new user in the network
     function registerUser(uint _userId, string memory _userName) public {
-        require(!users[_userId].isRegistered, "User is already registered.");
+        require(!users[_userId].isRegistered, "user already registered");
         users[_userId] = User(_userName, true);
     }
 
-    // Create a joint account and set initial individual contributions [cite: 73]
+    // create a joint account and set individual balances
     function createAcc(uint _userId1, uint _userId2, uint _balance1, uint _balance2) public {
-        require(users[_userId1].isRegistered && users[_userId2].isRegistered, "Both users must be registered.");
-        require(!jointAccounts[_userId1][_userId2], "Account already exists between these users.");
+        require(users[_userId1].isRegistered && users[_userId2].isRegistered, "both users should be registered");
+        require(!jointAccounts[_userId1][_userId2], "account already exists");
 
         jointAccounts[_userId1][_userId2] = true;
         jointAccounts[_userId2][_userId1] = true;
@@ -36,33 +36,33 @@ contract PaymentNetwork {
         balances[_userId2][_userId1] = _balance2;
     }
 
-    // Transfer amount along a specified path [cite: 75]
+    // transfer amount along the path
     function sendAmount(uint[] memory path, uint amount) public {
-        require(path.length >= 2, "Path must contain at least a sender and receiver.");
+        require(path.length >= 2, "path should have at least sender and receiver");
 
-        // PASS 1: Verification - ensure all edges exist and balances are sufficient [cite: 76, 77]
+        // first pass: check if all edges are there and have enough balance
         for (uint i = 0; i < path.length - 1; i++) {
             uint u = path[i];
             uint v = path[i+1];
             
-            require(jointAccounts[u][v], "Invalid path: missing joint account.");
-            require(balances[u][v] >= amount, "Transaction Failed: Insufficient balance along the path.");
+            require(jointAccounts[u][v], "missing joint account in path");
+            require(balances[u][v] >= amount, "insufficient balance on the edge");
         }
 
-        // PASS 2: Execution - update balances [cite: 22, 23, 24]
+        // second pass: update the balances
         for (uint i = 0; i < path.length - 1; i++) {
             uint u = path[i];
             uint v = path[i+1];
 
-            // Decrease balance from sender's side, increase on receiver's side
+            // deduct from sender side and add to receiver side
             balances[u][v] -= amount;
             balances[v][u] += amount;
         }
     }
 
-    // Terminate the account between two users [cite: 79, 80]
+    // close the joint account
     function closeAccount(uint _userId1, uint _userId2) public {
-        require(jointAccounts[_userId1][_userId2], "Account does not exist.");
+        require(jointAccounts[_userId1][_userId2], "account doesnt exist");
 
         jointAccounts[_userId1][_userId2] = false;
         jointAccounts[_userId2][_userId1] = false;
